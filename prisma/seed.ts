@@ -254,7 +254,93 @@ async function main() {
     ],
   });
 
-  // 7. Tạo Tài liệu học tập mẫu
+  // 7. Tạo Đề thi Nghe TOPIK I (듣기)
+  await prisma.exam.create({
+    data: {
+      title: 'Đề Thi Thử TOPIK I - Phần Nghe Hiểu (듣기 - Listening)',
+      description: 'Luyện kỹ năng nghe hội thoại giao tiếp, chọn tranh minh họa và trả lời câu hỏi phản xạ chuẩn TOPIK I.',
+      level: ExamLevel.TOPIK_I,
+      durationMinutes: 30,
+      totalPoints: 100,
+      isPublished: true,
+      teacherId: teacher.id,
+      classroomId: classroom.id,
+      questions: {
+        create: [
+          {
+            order: 1,
+            section: QuestionSection.LISTENING,
+            title: 'Nghe hội thoại và chọn địa điểm tương ứng',
+            passage: '남: 여기서 서울역까지 얼마나 걸려요?\n여: 지하철로 20분쯤 걸려요.',
+            content: '여기는 어디입니까? 알맞은 것을 고르십시오.',
+            points: 25,
+            explanation: 'Nam hỏi "Từ đây đến ga Seoul mất bao lâu?", Nữ trả lời "Đi tàu điện ngầm mất khoảng 20 phút". Cả hai đang nói về phương tiện và địa điểm di chuyển, đối thoại diễn ra tại Ga tàu (지하철역).',
+            options: {
+              create: [
+                { order: 1, text: '지하철역 (Ga tàu điện ngầm)', isCorrect: true },
+                { order: 2, text: '서점 (Hiệu sách)', isCorrect: false },
+                { order: 3, text: '식당 (Nhà hàng)', isCorrect: false },
+                { order: 4, text: '병원 (Bệnh viện)', isCorrect: false },
+              ],
+            },
+          },
+          {
+            order: 2,
+            section: QuestionSection.LISTENING,
+            title: 'Nghe và chọn lời đáp phù hợp nhất',
+            passage: '남: 주말에 영화 볼래요?\n여: (____________________)',
+            content: '여자의 알맞은 대답을 고르십시오.',
+            points: 25,
+            explanation: 'Nam rủ "Cuối tuần này đi xem phim không?". Khi được rủ rê bằng cấu trúc -(으)ㄹ래요?, câu đồng ý tự nhiên nhất là "좋아요. 같이 봐요" (Được chứ, cùng xem nhé).',
+            options: {
+              create: [
+                { order: 1, text: '좋아요. 같이 봐요. (Được chứ, cùng xem nhé.)', isCorrect: true },
+                { order: 2, text: '영화가 아니에요. (Không phải là phim.)', isCorrect: false },
+                { order: 3, text: '어제 영화를 봤어요. (Hôm qua tôi đã xem phim.)', isCorrect: false },
+                { order: 4, text: '극장이 아주 커요. (Rạp chiếu phim rất to.)', isCorrect: false },
+              ],
+            },
+          },
+          {
+            order: 3,
+            section: QuestionSection.LISTENING,
+            title: 'Nghe và chọn hành động tiếp theo của nhân vật',
+            passage: '여: 민수 씨, 지금 바빠요? 이 서류 좀 도와주세요.\n남: 네, 지금 바로 갈게요.',
+            content: '남자는 다음에 무엇을 하겠습니까?',
+            points: 25,
+            explanation: 'Nữ nhờ "Min-su à, anh có bận không? Giúp em tập tài liệu này với". Nam đáp "Vâng, tôi qua ngay đây". Hành động tiếp theo của nam là giúp nữ xử lý tài liệu.',
+            options: {
+              create: [
+                { order: 1, text: '여자를 도와줍니다. (Giúp đỡ người nữ.)', isCorrect: true },
+                { order: 2, text: '집에 갑니다. (Đi về nhà.)', isCorrect: false },
+                { order: 3, text: '커피를 마십니다. (Uống cà phê.)', isCorrect: false },
+                { order: 4, text: '전화를 받습니다. (Nghe điện thoại.)', isCorrect: false },
+              ],
+            },
+          },
+          {
+            order: 4,
+            section: QuestionSection.LISTENING,
+            title: 'Nghe và chọn nội dung trùng khớp',
+            passage: '남: 내일 날씨가 어때요?\n여: 비가 올 거예요. 우산을 챙기세요.',
+            content: '대화의 내용과 같은 것을 고르십시오.',
+            points: 25,
+            explanation: 'Nữ nói "Ngày mai trời sẽ mưa đấy. Hãy nhớ mang theo ô". Đáp án đúng là "내일 비가 옵니다" (Ngày mai trời mưa).',
+            options: {
+              create: [
+                { order: 1, text: '내일 비가 옵니다. (Ngày mai trời mưa.)', isCorrect: true },
+                { order: 2, text: '내일 날씨가 맑습니다. (Ngày mai trời nắng đẹp.)', isCorrect: false },
+                { order: 3, text: '남자는 우산이 있습니다. (Người nam đã có ô.)', isCorrect: false },
+                { order: 4, text: '여자는 오늘 비를 맞았습니다. (Người nữ hôm nay bị ướt mưa.)', isCorrect: false },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  // 8. Tạo Tài liệu học tập mẫu
   await prisma.material.create({
     data: {
       title: 'Bí Kíp Phân Biệt Trợ Từ 에 và 에서 Cực Chuẩn Cho TOPIK I',
