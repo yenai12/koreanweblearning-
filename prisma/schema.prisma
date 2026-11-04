@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+enum ExamLevel {
+  TOPIK_I
+  TOPIK_II
+  BASIC
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum QuestionSection {
+  LISTENING
+  READING
+  WRITING
+  VOCAB_GRAMMAR
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  name             String
+  role             Role              @default(STUDENT)
+  avatar           String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Quan hệ
+  taughtClasses    Classroom[]       @relation("TeacherClasses")
+  enrolledClasses  ClassroomMember[]
+  submissions      Submission[]
+  createdExams     Exam[]            @relation("TeacherExams")
+  materials        Material[]        @relation("TeacherMaterials")
+}
+
+model Classroom {
+  id          String            @id @default(uuid())
+  name        String
+  code        String            @unique // Mã tham gia lớp học (ví dụ: KOR-101)
+  description String?
+  teacherId   String
+  teacher     User              @relation("TeacherClasses", fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Quan hệ
+  members     ClassroomMember[]
+  exams       Exam[]
+  materials   Material[]
+}
+
+model ClassroomMember {
+  id          String    @id @default(uuid())
+  classroomId String
+  studentId   String
+  joinedAt    DateTime  @default(now())
+
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([classroomId, studentId])
+}
+
+model Exam {
+  id              String            @id @default(uuid())
+  title           String
+  description     String?
+  level           ExamLevel         @default(TOPIK_I)
+  durationMinutes Int               @default(60) // Thời gian làm bài (phút)
+  totalPoints     Int               @default(100)
+  isPublished     Boolean           @default(true)
+  teacherId       String
+  teacher         User              @relation("TeacherExams", fields: [teacherId], references: [id], onDelete: Cascade)
+  classroomId     String?
+  classroom       Classroom?        @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  questions       Question[]
+  submissions     Submission[]
+}
+
+model Question {
+  id           String          @id @default(uuid())
+  examId       String
+  order        Int             @default(1)
+  section      QuestionSection @default(READING)
+  title        String?         // Tiêu đề hoặc yêu cầu: ví dụ: "Chọn từ điền vào chỗ trống"
+  passage      String?         // Đoạn văn tiếng Hàn (nếu có)
+  audioUrl     String?         // File nghe tiếng Hàn (nếu có)
+  content      String          // Nội dung câu hỏi tiếng Hàn
+  points       Int             @default(5)
+  explanation  String?         // Lời giải thích chuẩn ngữ pháp và đáp án đúng
+  createdAt    DateTime        @default(now())
+
+  exam         Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  options      Option[]
+  answers      AnswerDetail[]
+}
+
+model Option {
+  id          String    @id @default(uuid())
+  questionId  String
+  order       Int       @default(1)
+  text        String    // Đáp án tiếng Hàn
+  isCorrect   Boolean   @default(false)
+
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  chosenIn    AnswerDetail[]
+}
+
+model Submission {
+  id           String         @id @default(uuid())
+  examId       String
+  studentId    String
+  score        Float          @default(0)
+  maxScore     Float          @default(100)
+  percentage   Float          @default(0) // Tỉ lệ % đúng
+  passed       Boolean        @default(false)
+  startedAt    DateTime       @default(now())
+  submittedAt  DateTime?
+  aiReview     String?        // Tổng hợp nhận xét của AI về bài làm
+
+  exam         Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student      User           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  details      AnswerDetail[]
+}
+
+model AnswerDetail {
+  id                 String     @id @default(uuid())
+  submissionId       String
+  questionId         String
+  selectedOptionId   String?
+  studentTextAnswer  String?    // Cho câu tự luận/dịch
+  isCorrect          Boolean    @default(false)
+  pointsAwarded      Float      @default(0)
+  aiFeedback         String?    // AI phân tích chi tiết vì sao câu này sai & cách khắc phục
+
+  submission         Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question           Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption     Option?    @relation(fields: [selectedOptionId], references: [id])
+}
+
+model Material {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  type        String     @default("DOCUMENT") // DOCUMENT, VOCABULARY, GRAMMAR, AUDIO
+  content     String?    // Nội dung bài học Markdown
+  fileUrl     String?    // Đường dẫn file PDF / Audio
+  teacherId   String
+  classroomId String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  teacher     User       @relation("TeacherMaterials", fields: [teacherId], references: [id], onDelete: Cascade)
+  classroom   Classroom? @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+}
